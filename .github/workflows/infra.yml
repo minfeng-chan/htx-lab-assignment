@@ -1,0 +1,174 @@
+name: Infrastructure
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: 'Compare main against this Git ref/commit'
+        default: 'HEAD^'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-dev
+  cancel-in-progress: false
+
+env:
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
+  TG_TF_PATH: terraform
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: '1.11.4'
+          terraform_wrapper: false
+      - uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4
+        with:
+          tflint_version: v0.55.1
+      - name: Install Terragrunt
+        run: bash .github/scripts/install-terragrunt.sh
+      - name: Formatting and HCL validation
+        run: |
+          terraform fmt -check -recursive infra
+          terragrunt --working-dir infra/environments hcl fmt --check
+          terragrunt --working-dir infra/environments hcl validate
+      - name: Terraform static analysis
+        run: |
+          tflint --chdir=infra/modules/direct-connect --init
+          tflint --chdir=infra/modules/direct-connect
+
+  risk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test risk detector
+        run: python3 -m unittest discover -s drift-detector/tests -v
+      - name: Check configuration risk before plan
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha || inputs.base_ref }}
+        run: |
+          mkdir -p reports
+          base="$(git rev-parse --verify --end-of-options "${BASE_REF}^{commit}")"
+          git diff --no-ext-diff --no-renames --unified=80 "$base" HEAD -- infra > reports/infra.diff
+          python3 drift-detector/detector.py --diff reports/infra.diff --output reports/risk.json
+      - name: Upload risk report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: risk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/risk.json
+          if-no-files-found: error
+          retention-days: 3
+
+  plan:
+    # Manual runs may continue when the PR-only validation job is skipped.
+    if: >-
+      always() && !cancelled() && needs.risk.result == 'success' &&
+      ((github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        needs.validate.result == 'success') ||
+       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
+        needs.validate.result == 'skipped'))
+    needs: [validate, risk]
+    outputs:
+      has_changes: ${{ steps.changes.outputs.has_changes }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: dev-plan
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      HTX_DEV_AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+      HTX_DEV_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+      HTX_DEV_DEPLOY_ROLE_NAME: ${{ vars.TF_DEPLOY_ROLE_NAME }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: '1.11.4'
+          terraform_wrapper: false
+      - name: Install Terragrunt
+        run: bash .github/scripts/install-terragrunt.sh
+      - name: Select changed units and downstream dependents
+        id: changes
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha || inputs.base_ref }}
+        run: python3 .github/scripts/select-units.py --base "$BASE_REF" --output reports/plan/units.json
+      - if: steps.changes.outputs.has_changes == 'true'
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
+          aws-region: ap-southeast-1
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+      - name: Create saved plans and readable reviews
+        if: steps.changes.outputs.has_changes == 'true'
+        run: python3 .github/scripts/run-plans.py plan --manifest reports/plan/units.json
+      - name: Plan review instructions
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          echo 'Review units.json and each plan.txt in the saved-plan artifact before approving dev-apply.' >> "$GITHUB_STEP_SUMMARY"
+      - if: steps.changes.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: saved-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/plan/
+          if-no-files-found: error
+          retention-days: 3
+
+  apply:
+    if: needs.plan.outputs.has_changes == 'true'
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    environment: dev-apply
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      HTX_DEV_AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+      HTX_DEV_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+      HTX_DEV_DEPLOY_ROLE_NAME: ${{ vars.TF_DEPLOY_ROLE_NAME }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: '1.11.4'
+          terraform_wrapper: false
+      - name: Install Terragrunt
+        run: bash .github/scripts/install-terragrunt.sh
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: saved-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/plan
+      - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
+          aws-region: ap-southeast-1
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+      - name: Apply the reviewed saved plans
+        run: python3 .github/scripts/run-plans.py apply --manifest reports/plan/units.json

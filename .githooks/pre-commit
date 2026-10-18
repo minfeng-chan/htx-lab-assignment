@@ -1,0 +1,4 @@
+#!/bin/sh
+# Check staged IaC before Git creates a commit.
+repo=$(git rev-parse --show-toplevel) || exit 2
+exec python3 "$repo/drift-detector/pre_commit.py"
