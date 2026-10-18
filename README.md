@@ -11,4 +11,6 @@ Hybrid integration between an on-premises legacy application and AWS.
 | 5 - Security | [Risks and controls](docs/security.md) |
 | 6 - Configuration risk detection | [Pre-commit and CI checks](drift-detector/README.md) |
 
+[Application swimlane diagrams](architecture/README.md#application-swimlane-flow).
+
 [Assignment PDF](reference/assignment.pdf). No AWS resources have been deployed; live plan/apply remains unverified.
