@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1450" height="1391" viewBox="0 0 1450 1391" role="img" aria-labelledby="title desc">
+<title id="title">Mode B - Nightly CSV import</title><desc id="desc">Unauthorized uploads return 401/403. On validation or import failure, retain input and alert. Duplicate batch IDs must not cause another import.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0 L10 4 L0 8 Z" fill="#334155"/></marker></defs>
+<rect width="1450" height="1391" fill="white"/>
+<text x="30" y="34" font-family="Arial,sans-serif" font-size="23" font-weight="bold" fill="#0f172a">Mode B - Nightly CSV import</text>
+<rect x="55.0" y="55" width="187.4" height="1251" rx="8" fill="#eff6ff"/>
+<text x="150.7" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#64748b">Data centre</text>
+<text x="150.7" y="104" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">Legacy application</text>
+<line x1="150.7" y1="137" x2="150.7" y2="1291" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="246.4" y="55" width="187.4" height="1251" rx="8" fill="#eff6ff"/>
+<text x="342.1" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#64748b">Data centre</text>
+<text x="342.1" y="104" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">Adapter</text>
+<line x1="342.1" y1="137" x2="342.1" y2="1291" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="437.9" y="55" width="187.4" height="1251" rx="8" fill="#f0fdf4"/>
+<text x="533.6" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#64748b">AWS</text>
+<text x="533.6" y="104" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">NLB / NGINX</text>
+<line x1="533.6" y1="137" x2="533.6" y2="1291" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="629.3" y="55" width="187.4" height="1251" rx="8" fill="#f0fdf4"/>
+<text x="725.0" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#64748b">AWS</text>
+<text x="725.0" y="104" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">Batch upload API</text>
+<line x1="725.0" y1="137" x2="725.0" y2="1291" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="820.7" y="55" width="187.4" height="1251" rx="8" fill="#f0fdf4"/>
+<text x="916.4" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#64748b">AWS</text>
+<text x="916.4" y="104" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">S3</text>
+<line x1="916.4" y1="137" x2="916.4" y2="1291" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1012.1" y="55" width="187.4" height="1251" rx="8" fill="#f0fdf4"/>
+<text x="1107.9" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#64748b">AWS</text>
+<text x="1107.9" y="104" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">CSV processor Job</text>
+<line x1="1107.9" y1="137" x2="1107.9" y2="1291" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1203.6" y="55" width="187.4" height="1251" rx="8" fill="#f0fdf4"/>
+<text x="1299.3" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#64748b">AWS</text>
+<text x="1299.3" y="104" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">RDS PostgreSQL</text>
+<line x1="1299.3" y1="137" x2="1299.3" y2="1291" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<line x1="150.71428571428572" y1="196" x2="342.1428571428571" y2="196" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="246.42857142857142" y="155" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">1. Export CSV to restricted</text>
+<text x="246.42857142857142" y="172" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">file drop</text>
+<rect x="30" y="208" width="1390" height="30" fill="#e2e8f0"/>
+<text x="45" y="228" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">Upload - adapter obtains a token and assigns batch_id</text>
+<line x1="342.1428571428571" y1="309" x2="533.5714285714286" y2="309" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="437.85714285714283" y="268" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">2. HTTPS POST /api/batch with</text>
+<text x="437.85714285714283" y="285" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">CSV, token and batch_id</text>
+<line x1="533.5714285714286" y1="374" x2="725.0" y2="374" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="629.2857142857142" y="333" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">3. Forward after JWT</text>
+<text x="629.2857142857142" y="350" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">authorization check</text>
+<line x1="725.0" y1="439" x2="916.4285714285713" y2="439" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="820.7142857142857" y="398" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">4. Store CSV under incoming/</text>
+<text x="820.7142857142857" y="415" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">using uploader role</text>
+<line x1="916.4285714285713" y1="487" x2="725.0" y2="487" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="820.7142857142857" y="463" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">5. Upload stored</text>
+<line x1="725.0" y1="552" x2="1107.857142857143" y2="552" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="916.4285714285714" y="528" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">6. Create Job via Kubernetes API</text>
+<line x1="725.0" y1="617" x2="533.5714285714286" y2="617" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="629.2857142857142" y="593" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">7. Upload accepted</text>
+<line x1="533.5714285714286" y1="699" x2="342.1428571428571" y2="699" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="437.85714285714283" y="658" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">8. Acceptance is not import</text>
+<text x="437.85714285714283" y="675" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">completion</text>
+<rect x="30" y="711" width="1390" height="30" fill="#e2e8f0"/>
+<text x="45" y="731" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="#0f172a">Process a valid new batch</text>
+<line x1="1107.857142857143" y1="812" x2="916.4285714285713" y2="812" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1012.1428571428571" y="771" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">9. Read CSV using processor</text>
+<text x="1012.1428571428571" y="788" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">role</text>
+<line x1="916.4285714285713" y1="860" x2="1107.857142857143" y2="860" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1012.1428571428571" y="836" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">10. CSV data</text>
+<path d="M1107.857142857143 936 h85 v24 h-85" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1167.857142857143" y="901" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">11. Validate CSV and check</text>
+<text x="1167.857142857143" y="918" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">batch_id</text>
+<line x1="1107.857142857143" y1="1007" x2="1299.2857142857142" y2="1007" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1203.5714285714284" y="966" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">12. IAM token and verified TLS</text>
+<text x="1203.5714285714284" y="983" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">connection</text>
+<line x1="1107.857142857143" y1="1072" x2="1299.2857142857142" y2="1072" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1203.5714285714284" y="1031" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">13. Transactional import with</text>
+<text x="1203.5714285714284" y="1048" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">unique batch_id</text>
+<line x1="1299.2857142857142" y1="1120" x2="1107.857142857143" y2="1120" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1203.5714285714284" y="1096" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">14. Commit confirmed</text>
+<line x1="1107.857142857143" y1="1202" x2="916.4285714285713" y2="1202" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1012.1428571428571" y="1161" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">15. Delete successfully</text>
+<text x="1012.1428571428571" y="1178" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">imported object</text>
+<path d="M1107.857142857143 1261 h85 v24 h-85" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1167.857142857143" y="1226" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">16. Clean temporary files and</text>
+<text x="1167.857142857143" y="1243" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#0f172a">log completion</text>
+<text x="30" y="1323" font-family="Arial,sans-serif" font-size="13" fill="#475569">Unauthorized uploads return 401/403. On validation or import failure, retain input and alert. Duplicate batch IDs must not cause another import.</text>
+</svg>

@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    box Data centre
+        participant L as Legacy application
+        participant A as Adapter
+    end
+    box AWS
+        participant E as NLB / NGINX
+        participant K as Keycloak
+        participant V as JWT authorization
+        participant R as Reference API
+    end
+    Note over L,A: Adapter uses the existing legacy interface
+    A->>E: Request token with client credentials
+    E->>K: Forward token request
+    K-->>E: Short-lived access token
+    E-->>A: Return token
+    L->>A: Request reference data
+    A->>E: GET /api/reference with token and request_id
+    E->>V: Validate token and required scope
+    V-->>E: Allow or deny
+    alt Authorized
+        E->>R: Forward request
+        R-->>E: Reference data
+        E-->>A: HTTPS response
+        A-->>L: Return through existing interface
+    else Invalid token or insufficient permission
+        E-->>A: 401 or 403
+    end

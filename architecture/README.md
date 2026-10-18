@@ -69,81 +69,15 @@ Each column is a component's lane. These diagrams describe the proposed applicat
 
 ### Authentication and Mode A - Reference API
 
-```mermaid
-sequenceDiagram
-    autonumber
-    box Data centre
-        participant L as Legacy application
-        participant A as Adapter
-    end
-    box AWS
-        participant E as NLB / NGINX
-        participant K as Keycloak
-        participant V as JWT authorization
-        participant R as Reference API
-    end
-    Note over L,A: Adapter uses the existing legacy interface
-    A->>E: Request token with client credentials
-    E->>K: Forward token request
-    K-->>E: Short-lived access token
-    E-->>A: Return token
-    L->>A: Request reference data
-    A->>E: GET /api/reference with token and request_id
-    E->>V: Validate token and required scope
-    V-->>E: Allow or deny
-    alt Authorized
-        E->>R: Forward request
-        R-->>E: Reference data
-        E-->>A: HTTPS response
-        A-->>L: Return through existing interface
-    else Invalid token or insufficient permission
-        E-->>A: 401 or 403
-    end
-```
+![Application Mode A swimlane](diagrams/application-mode-a.svg)
+
+[Mermaid source](diagrams/application-mode-a.mmd)
 
 ### Mode B - Nightly CSV import
 
-```mermaid
-sequenceDiagram
-    autonumber
-    box Data centre
-        participant L as Legacy application
-        participant A as Adapter
-    end
-    box AWS
-        participant E as NLB / NGINX
-        participant U as Batch upload API
-        participant S as S3
-        participant J as CSV processor Job
-        participant D as RDS PostgreSQL
-    end
-    L->>A: Export CSV to restricted file drop
-    Note over A,E: Obtain token as above, assign a stable batch_id
-    A->>E: POST /api/batch with CSV, token and batch_id
-    Note over E,U: NGINX checks token and scope with JWT authorization
-    alt Authorized
-        E->>U: Forward upload
-        U->>S: Store CSV under incoming/ using uploader role
-        S-->>U: Upload stored
-        U->>J: Create Job via Kubernetes API
-        U-->>E: Upload accepted
-        E-->>A: Acceptance is not import completion
-        J->>S: Read CSV using processor role
-        S-->>J: CSV data
-        J->>J: Validate CSV and check batch_id
-        alt Valid new batch
-            J->>D: Connect using IAM token and verified TLS
-            J->>D: Transactional import with unique batch_id
-            D-->>J: Commit confirmed
-            J->>S: Delete imported object
-            J->>J: Remove temporary files and log completion
-        else Invalid file, failed import or duplicate batch
-            Note over J,D: Do not duplicate imports, retain failed input and alert
-        end
-    else Unauthorized
-        E-->>A: 401 or 403, upload not forwarded
-    end
-```
+![Application Mode B swimlane](diagrams/application-mode-b.svg)
+
+[Mermaid source](diagrams/application-mode-b.mmd)
 
 The adapter initiates cloud connections; responses return on those sessions. No cloud-initiated connection to the legacy application is needed. Carry `request_id` or `batch_id` through logs for correlation.
 
